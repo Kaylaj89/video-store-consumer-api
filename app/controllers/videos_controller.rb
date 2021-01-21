@@ -1,7 +1,19 @@
 class VideosController < ApplicationController
   before_action :require_video, only: [:show]
 
+  def create
+    video = Video.new(title: params[:title], overview: params[:overview], release_date: params[:release_date], inventory: 1, available_inventory: 1)
+
+      if video.save
+        render status: :ok, json: {}
+      else
+        render status: :bad_request, json: { errors: video.errors.messages }
+      end
+
+  end
+
   def index
+
     if params[:query]
       data = VideoWrapper.search(params[:query])
     else
