@@ -54,7 +54,7 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      render json: videos.as_json(only: [:title, :checkout_date, :due_date]), status: :ok
+      render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
     end
     return
   end
