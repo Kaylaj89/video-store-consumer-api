@@ -2,7 +2,14 @@ class VideosController < ApplicationController
   before_action :require_video, only: [:show]
 
   def create
-    video = Video.new(title: params[:title], overview: params[:overview], release_date: params[:release_date], inventory: 1, available_inventory: 1)
+    video = Video.new(
+        title: params[:title],
+        overview: params[:overview],
+        release_date: params[:release_date],
+        image_url: params[:image_url],
+        external_id: params[:external_id],
+        inventory: 1,
+        available_inventory: 1)
 
       if video.save
         render status: :ok, json: {}
