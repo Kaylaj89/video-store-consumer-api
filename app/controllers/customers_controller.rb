@@ -31,7 +31,7 @@ class CustomersController < ApplicationController
 
     def currently_checked_out
     message = "#{@customer.name} does not currently have any checked out videos"
-    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.created_at == rental.updated_at} }
+    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && !rental.returned} }
     if videos.empty?
       render json: {
         ok: true,
@@ -39,7 +39,8 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      videoList = videos.map { |video|
+      video_list = videos.map { |video|
+        found_rental = video.rentals.find {|rental| rental.customer == @customer && !rental.returned}
         video_hash = {
           title: video.title,
           image_url: video.image_url,
@@ -47,21 +48,21 @@ class CustomersController < ApplicationController
           external_id: video.external_id,
           release_date: video.release_date,
           inventory: video.inventory,
-          checkout_date: video.created_at,
-          checkin_date: (video.created_at == video.updated_at) ? nil : video.updated_at,
-          due_date: video.created_at + 7.days,
+          checkout_date: found_rental.checkout_date,
+          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          due_date: found_rental.due_date,
           available_inventory: video.available_inventory
         }
         video_hash
       }
-      render json: videoList.as_json, status: :ok
+      render json: video_list.as_json, status: :ok
     end
     return
   end
 
   def checkout_history
     message = "#{@customer.name} has not previously checked out any videos"
-    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.created_at < rental.updated_at} }
+    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.returned} }
     if videos.empty?
       render json: {
         ok: true,
@@ -69,7 +70,8 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      videoList = videos.map { |video|
+      video_list = videos.map { |video|
+        found_rental = video.rentals.find {|rental| rental.customer == @customer && rental.returned }
         video_hash = {
           title: video.title,
           image_url: video.image_url,
@@ -77,15 +79,14 @@ class CustomersController < ApplicationController
           external_id: video.external_id,
           release_date: video.release_date,
           inventory: video.inventory,
-          checkout_date: video.created_at,
-          checkin_date: (video.created_at == video.updated_at) ? nil : video.updated_at,
-          due_date: video.created_at + 7.days,
+          checkout_date: found_rental.checkout_date,
+          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          due_date: found_rental.due_date,
           available_inventory: video.available_inventory
         }
         video_hash
       }
-      render json: videoList.filter { |video| !video.checkin_date.nil? }.as_json, status: :ok
-      # render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
+      render json: video_list.filter { |video| !video.checkin_date.nil? }.as_json, status: :ok
     end
     return
   end
