@@ -86,7 +86,7 @@ class CustomersController < ApplicationController
         }
         video_hash
       }
-      render json: video_list.filter { |video| !video.checkin_date.nil? }.as_json, status: :ok
+      render json: video_list.as_json, status: :ok
     end
     return
   end
