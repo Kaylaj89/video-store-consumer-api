@@ -49,7 +49,7 @@ class CustomersController < ApplicationController
           release_date: video.release_date,
           inventory: video.inventory,
           checkout_date: found_rental.checkout_date,
-          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
           due_date: found_rental.due_date,
           available_inventory: video.available_inventory
         }
@@ -80,7 +80,7 @@ class CustomersController < ApplicationController
           release_date: video.release_date,
           inventory: video.inventory,
           checkout_date: found_rental.checkout_date,
-          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
           due_date: found_rental.due_date,
           available_inventory: video.available_inventory
         }

@@ -64,7 +64,7 @@ class VideosController < ApplicationController
           account_credit: customer.account_credit,
           videos_checked_out_count: customer.videos_checked_out_count,
           checkout_date: found_rental.checkout_date,
-          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
           due_date: found_rental.due_date,
         }
         customer_hash
@@ -99,7 +99,7 @@ class VideosController < ApplicationController
           account_credit: customer.account_credit,
           videos_checked_out_count: customer.videos_checked_out_count,
           checkout_date: found_rental.checkout_date,
-          checkin_date: (found_rental.created_at == found_rental.updated_at) ? nil : found_rental.updated_at,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
           due_date: found_rental.due_date,
         }
         customer_hash
