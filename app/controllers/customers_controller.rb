@@ -69,7 +69,23 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
+      videoList = videos.map { |video|
+        video_hash = {
+          title: video.title,
+          image_url: video.image_url,
+          overview: video.overview,
+          external_id: video.external_id,
+          release_date: video.release_date,
+          inventory: video.inventory,
+          checkout_date: video.created_at,
+          checkin_date: (video.created_at == video.updated_at) ? nil : video.updated_at,
+          due_date: video.created_at + 7.days,
+          available_inventory: video.available_inventory
+        }
+        video_hash
+      }
+      render json: videoList.filter { |video| !video.checkin_date.nil? }.as_json, status: :ok
+      # render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
     end
     return
   end
