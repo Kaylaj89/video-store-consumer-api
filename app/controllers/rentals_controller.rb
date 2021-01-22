@@ -22,6 +22,7 @@ class RentalsController < ApplicationController
         }
       }
     end
+    rental.checkin_date = Date.today
     rental.returned = true
     if rental.save
       render status: :ok, json: {}

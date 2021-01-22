@@ -31,7 +31,7 @@ class CustomersController < ApplicationController
 
     def currently_checked_out
     message = "#{@customer.name} does not currently have any checked out videos"
-    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.created_at == rental.updated_at} }
+    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && !rental.returned} }
     if videos.empty?
       render json: {
         ok: true,
@@ -39,14 +39,30 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
+      video_list = videos.map { |video|
+        found_rental = video.rentals.find {|rental| rental.customer == @customer && !rental.returned}
+        video_hash = {
+          title: video.title,
+          image_url: video.image_url,
+          overview: video.overview,
+          external_id: video.external_id,
+          release_date: video.release_date,
+          inventory: video.inventory,
+          checkout_date: found_rental.checkout_date,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
+          due_date: found_rental.due_date,
+          available_inventory: video.available_inventory
+        }
+        video_hash
+      }
+      render json: video_list.as_json, status: :ok
     end
     return
   end
 
   def checkout_history
     message = "#{@customer.name} has not previously checked out any videos"
-    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.created_at < rental.updated_at} }
+    videos = Video.parameterized_list(params[:sort], params[:n], params[:p]).filter { |video| video.rentals.any? {|rental| rental.customer == @customer && rental.returned} }
     if videos.empty?
       render json: {
         ok: true,
@@ -54,7 +70,23 @@ class CustomersController < ApplicationController
         errors: [message]
       }, status: :ok
     else
-      render json: videos.as_json(only: [:title, :image_url, :overview, :external_id, :release_date, :inventory], methods: [:available_inventory]), status: :ok
+      video_list = videos.map { |video|
+        found_rental = video.rentals.find {|rental| rental.customer == @customer && rental.returned }
+        video_hash = {
+          title: video.title,
+          image_url: video.image_url,
+          overview: video.overview,
+          external_id: video.external_id,
+          release_date: video.release_date,
+          inventory: video.inventory,
+          checkout_date: found_rental.checkout_date,
+          checkin_date: found_rental.returned ? found_rental.checkin_date : nil,
+          due_date: found_rental.due_date,
+          available_inventory: video.available_inventory
+        }
+        video_hash
+      }
+      render json: video_list.as_json, status: :ok
     end
     return
   end
