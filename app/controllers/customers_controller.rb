@@ -48,6 +48,7 @@ class CustomersController < ApplicationController
           release_date: video.release_date,
           inventory: video.inventory,
           checkout_date: video.created_at,
+          checkin_date: (video.created_at == video.updated_at) ? nil : video.updated_at,
           due_date: video.created_at + 7.days,
           available_inventory: video.available_inventory
         }
